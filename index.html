@@ -1,0 +1,384 @@
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+	 <script src="https://raunak1089.github.io/all_scripts/fontawesome.js"></script>
+
+	 <script src="https://raunak1089.github.io/all_scripts/simpleTones.js"></script>
+
+   <script src="https://raunak1089.github.io/all_scripts/disablescroll.js"></script>
+
+
+<style>
+
+body{
+  user-select: none;
+  text-align: center;
+}
+
+#myCanvas{
+  margin-top: 100px;
+  margin-left: 70px;
+  border: 1px solid black;
+  background: pink;
+}
+
+#player{
+  border-right: 1px solid black;
+  position: absolute;
+  display: none;
+}
+
+#indicator{
+  border-bottom: 1px solid black;
+  position: absolute;
+  display: none;
+}
+
+#scale{
+  border-right: 1px solid black;
+  position: absolute;
+}
+
+buttons {
+  display: flex;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  width: fit-content;
+}
+
+button{
+  font-size: 1.5em;
+  width: 50px; 
+  height: 50px; 
+  border: 2px solid black; 
+  border-radius: 50%; 
+  margin: 5px;
+  cursor: pointer;
+
+}
+
+
+</style>
+
+
+<body>
+
+<buttons>
+<button onclick="clr()" style="color:red;"><i class="fa-solid fa-xmark"></i></button>
+<button onclick = "trying()" id="play_button"><i class="fa fa-play"></i></button>
+</buttons>
+
+<div>
+<canvas id="myCanvas" width="600" height="400" ontouchstart="disableScroll()" ontouchend="enableScroll()">
+Your browser does not support the canvas element.
+</canvas>
+
+<div id="player"></div>
+<div id="indicator"></div>
+
+<svg id="scale" width="70"></svg>
+
+</div>
+<br>
+<span>Draw audio frequency</span>
+
+
+
+
+
+<script>
+let canvas = document.getElementById("myCanvas");
+let ctx = canvas.getContext("2d");
+canvas.width=600;
+canvas.height=400;
+let cw = canvas.width; ch = canvas.height;
+
+function setPos(){
+  document.querySelector('#player').style.height= ch +'px';
+  document.querySelector('#indicator').style.width= cw +'px';
+  document.querySelector('#scale').setAttribute('height',ch);
+  document.querySelector('#player').style.left= canvas.getBoundingClientRect().left +'px';
+  document.querySelector('#player').style.top= canvas.getBoundingClientRect().top +'px';
+  document.querySelector('#indicator').style.left= canvas.getBoundingClientRect().left +'px';
+  document.querySelector('#indicator').style.top= canvas.getBoundingClientRect().top +'px';
+  document.querySelector('#scale').style.left= (canvas.getBoundingClientRect().left-70) +'px';
+  document.querySelector('#scale').style.top= canvas.getBoundingClientRect().top +'px';
+}
+
+window.onresize=()=>{setPos();}
+setPos();
+
+
+// DRAW SCALE _____________________________________
+
+marks = '';
+for (i=20; i<ch; i+=20){
+  marks += `<line x1="60" y1="${(ch-i)}" x2="70" y2="${(ch-i)}" style="stroke:black;stroke-width:1" />`;  
+  // if(i%80==0){marks += `<line x1="70" y1="${(ch-i)}" x2="670" y2="${(ch-i)}" style="stroke:black;stroke-width:1" />`;}  
+}
+marks += '<text style="fill:black; font-size: 13px">';
+for (i=20; i<ch; i+=20){
+  marks += `<tspan x="${35-6*((6*i).toString().length)}" y="${(ch-i+3)}">${6*i} Hz</tspan>`;
+}
+marks += '</text>';
+document.querySelector('#scale').innerHTML=marks;
+
+
+  // DRAW
+  draw();
+
+  
+function draw() {
+
+ ctx.lineWidth = 1;
+ ctx.strokeStyle = 'red';
+
+ctx.beginPath();
+
+// FOR ANDROID ___________________________________
+
+canvas.ontouchstart=function (ev) { 
+  const rect = canvas.getBoundingClientRect();
+  let x = ev.targetTouches[0].clientX - rect.left;
+  let y = ev.targetTouches[0].clientY - rect.top;
+    ctx.moveTo(x,y);
+}
+
+
+canvas.ontouchmove=function (ev) { 
+  const rect = canvas.getBoundingClientRect();
+  let x = ev.targetTouches[0].clientX - rect.left;
+  let y = ev.targetTouches[0].clientY - rect.top;
+    ctx.lineTo(x,y);
+ctx.stroke();
+}
+
+// FOR PC ___________________________________
+
+let dragValue;
+
+canvas.onmousedown = function(ev){
+  const rect = canvas.getBoundingClientRect();
+  let x = ev.clientX - rect.left;
+  let y = ev.clientY - rect.top;
+    ctx.moveTo(x,y);
+        dragValue = canvas;
+      }
+
+document.onmouseup = function(){
+        dragValue = null;        
+      }
+
+canvas.onmousemove = function(ev) {
+if (dragValue == canvas) {
+  const rect = dragValue.getBoundingClientRect();
+  let x = ev.clientX - rect.left;
+  let y = ev.clientY - rect.top;
+    ctx.lineTo(x,y);
+	ctx.stroke();
+	}
+};
+
+
+// LINES ________________________________
+
+
+xax = ctx.createImageData(cw, 2);
+
+for (let i = 0; i < xax.data.length; i += 4) {
+  xax.data[i+0] = 0; //Red
+  xax.data[i+1] = 0; //Green
+  xax.data[i+2] = 0; //Blue
+  xax.data[i+3] = 100; //Opacity
+}
+
+for (i=100; i<ch; i+=100) {
+  ctx.putImageData(xax, 0, i-2);
+}
+
+/*
+for (let i = -100; i < 100; i+=scale*2) {
+		draw_lines_x(i)
+}
+*/
+
+
+}
+
+function clr(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  draw();
+  notes=[];
+}
+
+let imgData, all;
+
+function trying() {
+var canvas = document.getElementById("myCanvas");
+var ctx = canvas.getContext("2d");
+
+
+  imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+all = [];
+for (let i = 0; i < cw; i++) {
+	all.push([]);
+	for (let j = 0; j < ch; j++) {
+		all[i].push(i + j*cw)
+	}
+}
+
+red_points = [];
+rows = []; columns = [];
+
+for (let i = 0; i < cw; i++) {
+    let found = false;
+    j = ch-1;
+    while (found == false & j >=0) {
+        if (imgData.data[4*all[i][j]] > 250){
+            red_points.push(all[i][j]);
+            rows.push(i); columns.push(ch-j-1);
+            found = true;
+        }
+    j--
+    }
+
+    if (j < 0) {
+            red_points.push(i+(ch-1)*cw);
+            rows.push(i); columns.push(0);
+    }
+}
+
+
+x_show = ctx.createImageData(2, 2);
+
+for (let i = 0; i < x_show.data.length; i += 4) {
+  x_show.data[i+0] = 255; //Red
+  x_show.data[i+3] = 255; //Opacity
+}
+
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+for (let i = 0; i < cw; i++) {
+		ctx.putImageData(x_show, i, (ch-columns[i]));
+}
+draw();
+
+/*
+function manage(lst){
+  while (lst[0]==0 || lst[lst.length-1]==0){
+    let item, k;
+    for (i=0; i<lst.length; i++){
+      if (lst[i]!=0){
+        k=i;
+        item=lst[i];
+        break;
+      }
+    }
+    for (i=0; i<k; i++){
+      lst[i]=item
+    }
+      
+    return lst
+  }
+}
+*/
+
+// console.log(all);
+// console.log(red_points);
+// console.log(rows);
+// console.log(columns);
+
+// console.log('MIN: ', eval(`Math.min(${columns.toString()})`));
+// console.log('MAX: ', eval(`Math.max(${columns.toString()})`));
+
+
+
+
+notes = [];
+note_freq_coords = [];
+
+for (x of columns){
+    notes.push([6*x,128]);
+    note_freq_coords.push(x);
+}
+
+
+// console.log(notes);
+
+
+// AUDIO FUNCTION ___________________________________________________
+
+
+var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+let playing=0;
+
+function playNote(frequency, duration, waveform) {
+  var oscillator = audioCtx.createOscillator();
+  var gainNode = audioCtx.createGain();
+
+  oscillator.type = waveform; // Set the waveform type here.
+  oscillator.frequency.value = frequency;
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+  oscillator.start();
+
+  document.querySelector('#player').style.display="inline";
+  document.querySelector('#indicator').style.display="inline";
+  document.querySelector('#play_button').disabled=true;
+  setTimeout(
+    function() {
+      oscillator.stop();
+      playMelody();
+      document.querySelector('#player').style.width=playing+'px';
+      document.querySelector('#indicator').style.width=playing+'px';
+      document.querySelector('#indicator').style.height=(ch-note_freq_coords[playing])+'px';
+      
+      document.querySelector('#myCanvas').style.filter='brightness('+(note_freq_coords[playing]*200/59-17400/59)+'%)';
+      console.log(note_freq_coords[playing]);
+      playing++;
+      if (notes.length == 0) {
+        document.querySelector('#player').style.display="none";
+        document.querySelector('#indicator').style.display="none";
+        document.querySelector('#myCanvas').style.filter='brightness(100%)';
+        document.querySelector('#player').style.width=0+'px';
+        document.querySelector('#indicator').style.width=0+'px';
+        document.querySelector('#play_button').disabled=false;
+      }
+    }, duration);
+}
+
+function playMelody() {
+  if (notes.length > 0) {
+    note = notes.pop();
+    playNote(note[0], 1, "sine");
+    // playNote(note[0], 1000 * 256 / (note[1] * tempo));
+  }
+}
+
+
+notes.reverse();
+tempo = 100;
+
+playMelody();
+
+};
+
+
+
+
+
+
+</script>
+
+
+<script>
+//  javascript:(function(){var script=document.createElement('script');script.src="https://cdn.jsdelivr.net/npm/eruda"; document.body.appendChild(script);script.onload = function () {eruda.init()} })();
+
+</script>
+
+<script>
+//	javascript:(function () {let acl = new Accelerometer({frequency: 60});acl.addEventListener('reading', () => {      let h = document.body.scrollHeight;      window.scrollBy(-acl.x*h/1000,-acl.y*h/1000)});acl.start();})();
+
+</script>
+
+</body>
+</html>
