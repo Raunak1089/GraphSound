@@ -309,13 +309,13 @@ for (x of columns){
 
 
 var audioCtx = new(window.AudioContext || window.webkitAudioContext)();
-let playing=0;
+let playing = 0;
 
 function playNote(frequency, duration) {
   var oscillator = audioCtx.createOscillator();
   var gainNode = audioCtx.createGain();
 
-  oscillator.type = "sine"; // Set the waveform type here.
+  oscillator.type = "sine";
   oscillator.frequency.value = frequency;
   oscillator.connect(gainNode);
   gainNode.connect(audioCtx.destination);
@@ -349,8 +349,8 @@ function playNote(frequency, duration) {
 function playMelody() {
   if (notes.length > 0) {
     note = notes.pop();
-    playNote(note[0], 1);
-    // playNote(note[0], 1000 * 256 / (note[1] * tempo));
+    // playNote(note[0], 1);
+    playNote(note[0], 1000 * 256 / (note[1] * tempo));
   }
 }
 
