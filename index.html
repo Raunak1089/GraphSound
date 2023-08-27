@@ -70,7 +70,7 @@ button{
 </buttons>
 
 <div>
-<canvas id="myCanvas" width="600" height="400" ontouchstart="disableScroll();console.log('Started');" ontouchend="enableScroll();console.log('Ended');">
+<canvas id="myCanvas" width="600" height="400" ontouchend="enableScroll();">
 Your browser does not support the canvas element.
 </canvas>
 
@@ -139,6 +139,7 @@ ctx.beginPath();
 // FOR ANDROID ___________________________________
 
 canvas.ontouchstart=function (ev) { 
+	disableScroll();
   const rect = canvas.getBoundingClientRect();
   let x = ev.targetTouches[0].clientX - rect.left;
   let y = ev.targetTouches[0].clientY - rect.top;
